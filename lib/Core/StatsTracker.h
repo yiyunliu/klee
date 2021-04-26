@@ -67,6 +67,7 @@ namespace klee {
 
   public:
     StatsTracker(Executor &_executor, std::string _objectFilename,
+		 // YL: bookmark
                  bool _updateMinDistToUncovered);
     ~StatsTracker();
 

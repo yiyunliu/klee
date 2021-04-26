@@ -2032,6 +2032,7 @@ Function* Executor::getTargetFunction(Value *calledVal, ExecutionState &state) {
   }
 }
 
+// YL: where instruction gets executed
 void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
   Instruction *i = ki->inst;
   switch (i->getOpcode()) {
@@ -2509,6 +2510,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
     // Arithmetic / logical
 
+    // YL: bookmark
   case Instruction::Add: {
     ref<Expr> left = eval(ki, 0, state).value;
     ref<Expr> right = eval(ki, 1, state).value;

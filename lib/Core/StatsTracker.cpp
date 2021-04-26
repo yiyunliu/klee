@@ -214,6 +214,7 @@ StatsTracker::StatsTracker(Executor &_executor, std::string _objectFilename,
 
       if (OutputIStats) {
         unsigned id = ki->info->id;
+        // YL: setIndex. weird way of accessing fields.
         theStatisticManager->setIndex(id);
         if (kf->trackCoverage && instructionIsCoverable(ki->inst))
           ++stats::uncoveredInstructions;
@@ -732,9 +733,11 @@ void StatsTracker::writeIStats() {
 
 ///
 
+// YL: call graph?
 typedef std::map<Instruction*, std::vector<Function*> > calltargets_ty;
 
 static calltargets_ty callTargets;
+// reverse map?
 static std::map<Function*, std::vector<Instruction*> > functionCallers;
 static std::map<Function*, unsigned> functionShortestPath;
 
@@ -759,6 +762,7 @@ uint64_t klee::computeMinDistToUncovered(const KInstruction *ki,
     return sm.getIndexedValue(stats::minDistToUncovered,
                               ki->info->id);
   } else {
+    // YL: bookmark
     uint64_t minDistLocal = sm.getIndexedValue(stats::minDistToUncovered,
                                                ki->info->id);
     uint64_t distToReturn = sm.getIndexedValue(stats::minDistToReturn,
@@ -774,6 +778,7 @@ uint64_t klee::computeMinDistToUncovered(const KInstruction *ki,
   }
 }
 
+// YL: bookmark. important
 void StatsTracker::computeReachableUncovered() {
   KModule *km = executor.kmodule.get();
   const auto m = km->module.get();
@@ -850,6 +855,7 @@ void StatsTracker::computeReachableUncovered() {
           Instruction *inst = &*it;
           instructions.push_back(inst);
           unsigned id = infos.getInfo(*inst).id;
+          // YL: bookmark
           sm.setIndexedValue(stats::minDistToReturn, 
                              id, 
                              isa<ReturnInst>(inst)
@@ -929,6 +935,7 @@ void StatsTracker::computeReachableUncovered() {
         Instruction *inst = &*it;
         unsigned id = infos.getInfo(*inst).id;
         instructions.push_back(inst);
+        // YL: bookmark
         sm.setIndexedValue(stats::minDistToUncovered, 
                            id, 
                            sm.getIndexedValue(stats::uncoveredInstructions, id));
