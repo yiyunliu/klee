@@ -733,11 +733,11 @@ void StatsTracker::writeIStats() {
 
 ///
 
-// YL: call graph?
+// YL: control flow graph?
 typedef std::map<Instruction*, std::vector<Function*> > calltargets_ty;
 
 static calltargets_ty callTargets;
-// reverse map?
+// YL: reverse map?
 static std::map<Function*, std::vector<Instruction*> > functionCallers;
 static std::map<Function*, unsigned> functionShortestPath;
 

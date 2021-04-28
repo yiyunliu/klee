@@ -72,13 +72,15 @@ StackFrame::~StackFrame() {
 
 ExecutionState::ExecutionState(KFunction *kf) :
     pc(kf->instructions),
+    hlpc_0(""),
+    hlpc_1(0),
     prevPC(pc),
     depth(0),
     ptreeNode(nullptr),
     steppedInstructions(0),
     instsSinceCovNew(0),
     coveredNew(false),
-    forkDisabled(false) {
+    forkDisabled(false){
   pushFrame(nullptr, kf);
   setID();
 }

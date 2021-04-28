@@ -161,6 +161,12 @@ public:
   /// instruction
   KInstIterator pc;
 
+  /// @brief Program counter to the high level PC
+  /// Represented as a pair of bytecode and offset. 
+  /// Empty string means no information
+  std::string hlpc_0;
+  std::uint64_t hlpc_1;
+
   /// @brief Pointer to instruction which is currently executed
   KInstIterator prevPC;
 

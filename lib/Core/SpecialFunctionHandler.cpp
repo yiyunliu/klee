@@ -82,6 +82,7 @@ static SpecialFunctionHandler::HandlerInfo handlerInfo[] = {
   addDNR("klee_abort", handleAbort),
   addDNR("klee_silent_exit", handleSilentExit),
   addDNR("klee_report_error", handleReportError),
+  add("klee_hlpc", handleHighLevelPC, false),
   add("calloc", handleCalloc, true),
   add("free", handleFree, false),
   add("klee_assume", handleAssume, false),
@@ -340,6 +341,23 @@ void SpecialFunctionHandler::handleReportError(ExecutionState &state,
 				 readStringAtAddress(state, arguments[2]),
 				 Executor::ReportError,
 				 readStringAtAddress(state, arguments[3]).c_str());
+}
+
+void SpecialFunctionHandler::handleHighLevelPC(ExecutionState &state,
+                                               KInstruction *target,
+                                               std::vector<ref<Expr> > &arguments) {
+  assert(arguments.size()==2 && "invalid number of arguments to klee_hlpc");
+
+  state.hlpc_0 = readStringAtAddress(state, arguments[0]);
+
+  if (ref<ConstantExpr> CE = dyn_cast<ConstantExpr>(arguments[1])) {
+    state.hlpc_1 = CE.get()->getZExtValue();
+  } else {
+    executor.terminateStateOnError(state, 
+                                   "klee_hlpc requires a constant offset",
+                                   Executor::User);
+  }
+  // state.hlpc_1 = arguments[1]
 }
 
 void SpecialFunctionHandler::handleOpenMerge(ExecutionState &state,

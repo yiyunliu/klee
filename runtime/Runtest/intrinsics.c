@@ -152,6 +152,10 @@ void klee_assume(uintptr_t x) {
   }
 }
 
+void klee_hlpc(const char *hlpc_code, uint64_t hlpc_offset) {
+  ;
+}
+
 #define KLEE_GET_VALUE_STUB(suffix, type)                                      \
   type klee_get_value##suffix(type x) { return x; }
 

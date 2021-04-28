@@ -119,6 +119,11 @@ extern "C" {
   void klee_posix_prefer_cex(void *object, uintptr_t condition);
   void klee_mark_global(void *object);
 
+  /* Intrinsics for High-Level Program Counter (specialized to Python)
+   */
+  void klee_hlpc(const char *hlpc_code, uint64_t hlpc_offset);
+
+
   /* Return a possible constant value for the input expression. This
      allows programs to forcibly concretize values on their own. */
 #define KLEE_GET_VALUE_PROTO(suffix, type)	type klee_get_value##suffix(type expr)
