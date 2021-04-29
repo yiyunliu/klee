@@ -63,6 +63,7 @@ namespace klee {
     enum CoreSearchType : std::uint8_t {
       DFS,
       BFS,
+      HLPCRandomState,
       RandomState,
       RandomPath,
       NURS_CovNew,
@@ -120,6 +121,7 @@ namespace klee {
     void printName(llvm::raw_ostream &os) override;
   };
 
+
   /// The base class for all weighted searchers. Uses DiscretePDF as underlying
   /// data structure.
   class WeightedRandomSearcher final : public Searcher {
@@ -155,6 +157,26 @@ namespace klee {
     bool empty() override;
     void printName(llvm::raw_ostream &os) override;
   };
+
+
+  /// HLPCRandomSearcher picks a state randomly.
+  class HLPCRandomSearcher final : public Searcher {
+    std::map<std::pair<std::string, std::uint64_t>, WeightedRandomSearcher> partitions;
+    RNG &theRNG;
+
+  public:
+    explicit HLPCRandomSearcher(RNG &rng);
+    ExecutionState &selectState() override;
+    void update(ExecutionState *current,
+                const std::vector<ExecutionState *> &addedStates,
+                const std::vector<ExecutionState *> &removedStates) override;
+    bool empty() override;
+    void printName(llvm::raw_ostream &os) override;
+  };
+
+
+
+
 
   /// RandomPathSearcher performs a random walk of the PTree to select a state.
   /// PTree is a global data structure, however, a searcher can sometimes only

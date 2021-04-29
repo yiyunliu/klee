@@ -35,6 +35,8 @@ cl::list<Searcher::CoreSearchType> CoreSearch(
                    "are taken at the level of (2-way) forks"),
         clEnumValN(Searcher::RandomState, "random-state",
                    "randomly select a state to explore"),
+        clEnumValN(Searcher::HLPCRandomState, "hlpc-random-state",
+                   "randomly select a state to explore based on HLPC"),
         clEnumValN(Searcher::RandomPath, "random-path",
                    "use Random Path Selection (see OSDI'08 paper)"),
         clEnumValN(Searcher::NURS_CovNew, "nurs:covnew",
@@ -110,6 +112,7 @@ Searcher *getNewSearcher(Searcher::CoreSearchType type, RNG &rng, PTree &process
     case Searcher::DFS: searcher = new DFSSearcher(); break;
     case Searcher::BFS: searcher = new BFSSearcher(); break;
     case Searcher::RandomState: searcher = new RandomSearcher(rng); break;
+    case Searcher::HLPCRandomState: searcher = new HLPCRandomSearcher(rng); break;
     case Searcher::RandomPath: searcher = new RandomPathSearcher(processTree, rng); break;
     case Searcher::NURS_CovNew: searcher = new WeightedRandomSearcher(WeightedRandomSearcher::CoveringNew, rng); break;
     case Searcher::NURS_MD2U: searcher = new WeightedRandomSearcher(WeightedRandomSearcher::MinDistToUncovered, rng); break;

@@ -144,6 +144,46 @@ void RandomSearcher::printName(llvm::raw_ostream &os) {
   os << "RandomSearcher\n";
 }
 
+///
+
+HLPCRandomSearcher::HLPCRandomSearcher(RNG &rng) : theRNG{rng} {}
+
+ExecutionState &HLPCRandomSearcher::selectState() {
+  auto cls_iter = partitions.begin();
+  const auto ind = theRNG.getInt32() % partitions.size();
+  std::advance(cls_iter, ind);
+  if(ind != 0)
+    llvm::errs() << ind << '\n';
+  return (cls_iter->second).selectState();
+}
+
+void HLPCRandomSearcher::update(ExecutionState *current,
+                            const std::vector<ExecutionState *> &addedStates,
+                            const std::vector<ExecutionState *> &removedStates) {
+  // insert states
+  for (auto state : addedStates) {
+    auto &partition = partitions.emplace(std::piecewise_construct,
+					 std::forward_as_tuple(state->hlpc_0, state->hlpc_1),
+					 std::forward_as_tuple(WeightedRandomSearcher::CoveringNew, theRNG)).first->second;
+    partition.update(current, {state}, {});
+  }
+
+  // remove states
+  for (auto state : removedStates) {
+    const auto k = std::make_pair(state->hlpc_0, state->hlpc_1);
+    auto &partition = partitions.find(k)->second;
+    partition.update(current, {}, {state});
+  }
+}
+
+bool HLPCRandomSearcher::empty() {
+  return std::all_of(std::begin(partitions), std::end(partitions),[](auto &s){return s.second.empty();});
+}
+
+void HLPCRandomSearcher::printName(llvm::raw_ostream &os) {
+  os << "HLPCRandomSearcher\n";
+}
+
 
 ///
 
