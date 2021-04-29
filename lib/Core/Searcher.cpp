@@ -149,35 +149,37 @@ void RandomSearcher::printName(llvm::raw_ostream &os) {
 HLPCRandomSearcher::HLPCRandomSearcher(RNG &rng) : theRNG{rng} {}
 
 ExecutionState &HLPCRandomSearcher::selectState() {
-  auto cls_iter = partitions.begin();
-  const auto ind = theRNG.getInt32() % partitions.size();
-  std::advance(cls_iter, ind);
-  if(ind != 0)
-    llvm::errs() << ind << '\n';
-  return (cls_iter->second).selectState();
+  partitions.clear();
+  for(auto state: states) {
+    partitions[{state->hlpc_0,state->hlpc_1}].push_back(state);
+  }
+  auto cls_iter = std::begin(partitions);
+  const auto ind0 = theRNG.getInt32() % partitions.size();
+  std::advance(cls_iter, ind0);
+  auto &partition = cls_iter->second;
+  const auto ind1 = theRNG.getInt32() % partition.size();
+  // if(ind0 != 0 || ind1 != 0) {
+  //   llvm::errs() << ind0 << ":" << ind1 << "\n";
+  // }
+  return *partition[ind1];
 }
 
 void HLPCRandomSearcher::update(ExecutionState *current,
                             const std::vector<ExecutionState *> &addedStates,
                             const std::vector<ExecutionState *> &removedStates) {
   // insert states
-  for (auto state : addedStates) {
-    auto &partition = partitions.emplace(std::piecewise_construct,
-					 std::forward_as_tuple(state->hlpc_0, state->hlpc_1),
-					 std::forward_as_tuple(WeightedRandomSearcher::CoveringNew, theRNG)).first->second;
-    partition.update(current, {state}, {});
-  }
+  states.insert(states.end(), addedStates.begin(), addedStates.end());
 
   // remove states
-  for (auto state : removedStates) {
-    const auto k = std::make_pair(state->hlpc_0, state->hlpc_1);
-    auto &partition = partitions.find(k)->second;
-    partition.update(current, {}, {state});
+  for (const auto state : removedStates) {
+    auto it = std::find(states.begin(), states.end(), state);
+    assert(it != states.end() && "invalid state removed");
+    states.erase(it);
   }
 }
 
 bool HLPCRandomSearcher::empty() {
-  return std::all_of(std::begin(partitions), std::end(partitions),[](auto &s){return s.second.empty();});
+  return states.empty();
 }
 
 void HLPCRandomSearcher::printName(llvm::raw_ostream &os) {

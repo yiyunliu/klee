@@ -161,7 +161,8 @@ namespace klee {
 
   /// HLPCRandomSearcher picks a state randomly.
   class HLPCRandomSearcher final : public Searcher {
-    std::map<std::pair<std::string, std::uint64_t>, WeightedRandomSearcher> partitions;
+    std::vector<ExecutionState*> states;
+    std::map<std::pair<std::string,std::uint64_t>, std::vector<ExecutionState*>> partitions;
     RNG &theRNG;
 
   public:
