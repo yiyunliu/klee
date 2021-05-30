@@ -56,6 +56,8 @@
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/BasicBlock.h"
+#include "llvm/Support/Format.h"
+#include <tuple>
 #if LLVM_VERSION_CODE < LLVM_VERSION(8, 0)
 #include "llvm/IR/CallSite.h"
 #endif
@@ -2004,6 +2006,7 @@ void Executor::transferToBasicBlock(BasicBlock *dst, BasicBlock *src,
 
 /// Compute the true target of a function call, resolving LLVM aliases
 /// and bitcasts.
+// YL: bookmark. where function name gets resolved
 Function* Executor::getTargetFunction(Value *calledVal, ExecutionState &state) {
   SmallPtrSet<const GlobalValue*, 3> Visited;
 
@@ -3523,11 +3526,22 @@ void Executor::run(ExecutionState &initialState) {
   std::vector<ExecutionState *> newStates(states.begin(), states.end());
   searcher->update(0, newStates, std::vector<ExecutionState *>());
 
+  // YL: bookmark
+  StatisticManager &sm = *theStatisticManager;
+  std::map<std::pair<std::string,std::uint64_t>, unsigned> covered_hlpc;
+  
   // main interpreter loop
   while (!states.empty() && !haltExecution) {
     ExecutionState &state = searcher->selectState();
+    const auto old_sz = covered_hlpc.size();
+    ++covered_hlpc[{state.hlpc_0, state.hlpc_1}];
+    const auto new_sz = covered_hlpc.size();
     KInstruction *ki = state.pc;
     stepInstruction(state);
+
+    if(new_sz > old_sz) {
+      llvm::errs() << "HLPC " << new_sz << "," << sm.getValue(stats::instructions) << "\n";
+    }
 
     executeInstruction(state, ki);
     timers.invoke();
@@ -3540,6 +3554,18 @@ void Executor::run(ExecutionState &initialState) {
       // update searchers when states were terminated early due to memory pressure
       updateStates(nullptr);
     }
+  }
+
+
+  for (const auto &kv : covered_hlpc) {
+    llvm::errs() << "HLPC DIST ";
+    for(std::string::size_type i = 0; i < kv.first.first.size() && i < 40; ++i) {
+      llvm::errs() << llvm::format_hex_no_prefix(kv.first.first[i], 2, true);
+    }
+    // for (auto ch : kv.first.first) {
+    //   llvm::errs() << llvm::format_hex_no_prefix(ch, 2, true);
+    // }
+    llvm::errs() << ":" << static_cast<std::int64_t>(kv.first.second) << "," << kv.second << '\n';
   }
 
   delete searcher;

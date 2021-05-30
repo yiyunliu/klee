@@ -32,6 +32,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstdint>
 
 using namespace klee;
 using namespace llvm;
@@ -158,6 +159,19 @@ ExecutionState &HLPCRandomSearcher::selectState() {
   std::advance(cls_iter, ind0);
   auto &partition = cls_iter->second;
   const auto ind1 = theRNG.getInt32() % partition.size();
+  static unsigned cnt = 100000;
+  static decltype(partitions)::size_type max_hlpcs = 0;
+  max_hlpcs = std::max(partitions.size(), max_hlpcs);  
+  if(false && max_hlpcs > 1 && cnt --> 0) {
+    cnt = 100000;
+
+    llvm::errs() << "Number of partitions:" << max_hlpcs << "," << states.size() << "," << partition.size() << "," << ind0 << "," << ind1 << '\n';
+    for(auto &kv : partitions) {
+      llvm::errs() << kv.first.second << ", ";
+    }
+    llvm::errs() << '\n';
+  }
+
   // if(ind0 != 0 || ind1 != 0) {
   //   llvm::errs() << ind0 << ":" << ind1 << "\n";
   // }

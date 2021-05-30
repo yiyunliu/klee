@@ -121,7 +121,7 @@ extern "C" {
 
   /* Intrinsics for High-Level Program Counter (specialized to Python)
    */
-  void klee_hlpc(const char *hlpc_code, uint64_t hlpc_offset);
+  void klee_hlpc(const char *hlpc_code, size_t sz, uint64_t hlpc_offset);
 
 
   /* Return a possible constant value for the input expression. This

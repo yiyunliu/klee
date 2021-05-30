@@ -96,6 +96,7 @@ namespace klee {
     /* Convenience routines */
 
     std::string readStringAtAddress(ExecutionState &state, ref<Expr> address);
+    std::string readStringAtAddress(ExecutionState &state, ref<Expr> address, ref<Expr> sz);
     
     /* Handlers */
 

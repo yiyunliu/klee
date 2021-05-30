@@ -178,6 +178,7 @@ namespace {
                      "Link in uclibc (adapted for KLEE)") KLEE_LLVM_CL_VAL_END),
       cl::init(LibcType::FreestandingLibc), cl::cat(LinkCat));
 
+  // YL: bookmark, link-llvm-lib
   cl::list<std::string>
       LinkLibraries("link-llvm-lib",
                     cl::desc("Link the given bitcode library before execution, "

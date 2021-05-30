@@ -152,7 +152,7 @@ void klee_assume(uintptr_t x) {
   }
 }
 
-void klee_hlpc(const char *hlpc_code, uint64_t hlpc_offset) {
+void klee_hlpc(const char *hlpc_code, size_t sz, uint64_t hlpc_offset) {
   ;
 }
 

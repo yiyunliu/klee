@@ -290,6 +290,64 @@ SpecialFunctionHandler::readStringAtAddress(ExecutionState &state,
   return buf.str();
 }
 
+// reads a concrete string from memory, fixed length
+std::string 
+SpecialFunctionHandler::readStringAtAddress(ExecutionState &state, 
+                                            ref<Expr> addressExpr,
+					    ref<Expr> szExpr) {
+  ObjectPair op;
+  addressExpr = executor.toUnique(state, addressExpr);
+  if (!isa<ConstantExpr>(addressExpr)) {
+    executor.terminateStateOnError(
+        state, "Symbolic string pointer passed to one of the klee_ functions",
+        Executor::TerminateReason::User);
+    return "";
+  }
+  ref<ConstantExpr> address = cast<ConstantExpr>(addressExpr);
+  if (!state.addressSpace.resolveOne(address, op)) {
+    executor.terminateStateOnError(
+        state, "Invalid string pointer passed to one of the klee_ functions",
+        Executor::TerminateReason::User);
+    return "";
+  }
+
+  size_t sz = 0xdeadbeef;
+  if (ref<ConstantExpr> CE = dyn_cast<ConstantExpr>(szExpr)) {
+    sz = CE.get()->getZExtValue();
+  } else {
+    executor.terminateStateOnError(state, 
+                                   "Symbolic string size passed to one of the klee_ functions",
+                                   Executor::User);
+  }
+
+  const MemoryObject *mo = op.first;
+  const ObjectState *os = op.second;
+
+  auto relativeOffset = mo->getOffsetExpr(address);
+  // the relativeOffset must be concrete as the address is concrete
+  size_t offset = cast<ConstantExpr>(relativeOffset)->getZExtValue();
+
+  std::ostringstream buf;
+  char c = 0;
+  for (size_t i = offset; i < mo->size; ++i) {
+    if (sz-- == 0) {
+      // we read the whole string
+      break;
+    }
+    ref<Expr> cur = os->read8(i);
+    cur = executor.toUnique(state, cur);
+    assert(isa<ConstantExpr>(cur) && 
+           "hit symbolic char while reading concrete string");
+    c = cast<ConstantExpr>(cur)->getZExtValue(8);
+
+    buf << c;
+  }
+
+  return buf.str();
+}
+
+
+
 /****/
 
 void SpecialFunctionHandler::handleAbort(ExecutionState &state,
@@ -346,11 +404,11 @@ void SpecialFunctionHandler::handleReportError(ExecutionState &state,
 void SpecialFunctionHandler::handleHighLevelPC(ExecutionState &state,
                                                KInstruction *target,
                                                std::vector<ref<Expr> > &arguments) {
-  assert(arguments.size()==2 && "invalid number of arguments to klee_hlpc");
+  assert(arguments.size()==3 && "invalid number of arguments to klee_hlpc");
 
-  state.hlpc_0 = readStringAtAddress(state, arguments[0]);
+  state.hlpc_0 = readStringAtAddress(state, arguments[0], arguments[1]);
 
-  if (ref<ConstantExpr> CE = dyn_cast<ConstantExpr>(arguments[1])) {
+  if (ref<ConstantExpr> CE = dyn_cast<ConstantExpr>(arguments[2])) {
     state.hlpc_1 = CE.get()->getZExtValue();
   } else {
     executor.terminateStateOnError(state, 
